@@ -1,36 +1,26 @@
 <script>
   import { onMount } from "svelte";
+  import { fade, fly } from "svelte/transition";
   import HeroProfile from "./components/HeroProfile.svelte";
   import FamilyInfo from "./components/FamilyInfo.svelte";
   import Vehicles from "./components/Vehicles.svelte";
   import Properties from "./components/Properties.svelte";
   import FinancialStatus from "./components/FinancialStatus.svelte";
   import NetworkAnalysis from "./components/NetworkAnalysis.svelte";
+  import { heroData } from "./lib/heroData.js";
 
-  let activeHero = {
-    name: "Bruce Wayne",
-    alias: "Batman",
-    age: 35,
-    location: "Gotham City",
-    occupation: "CEO of Wayne Enterprises",
-    profileImg: "/hero-profile.svg",
-    family: {
-      parents: "Thomas & Martha Wayne (Deceased)",
-      siblings: "None",
-      children: "Damian Wayne (Biological), Dick Grayson (Adopted)",
-    },
-    financials: {
-      netWorth: "$9.2B",
-      annualIncome: "$750M",
-      majorAssets: ["Wayne Manor", "Batcave", "Wayne Tower"],
-    },
-    vehicles: ["Batmobile", "Batwing", "Batpod"],
-    properties: ["Wayne Manor", "Wayne Tower", "Various Global Properties"],
-    relationships: {
-      allies: ["Robin", "Alfred", "Gordon", "Nightwing"],
-      enemies: ["Joker", "Riddler", "Penguin", "Two-Face"],
-    },
-  };
+  // Default to Batman as the active hero
+  let activeHeroId = "Batman";
+  let activeHero = heroData[activeHeroId];
+
+  // Handle character selection from the network graph
+  function handleCharacterSelect(event) {
+    const selectedCharacterId = event.detail;
+    if (heroData[selectedCharacterId]) {
+      activeHeroId = selectedCharacterId;
+      activeHero = heroData[activeHeroId];
+    }
+  }
 </script>
 
 <main>
@@ -46,19 +36,27 @@
   </header>
 
   <div class="container">
-    <HeroProfile hero={activeHero} />
+    {#key activeHeroId}
+      <div in:fly={{ y: 20, duration: 300 }} out:fade={{ duration: 200 }}>
+        <HeroProfile hero={activeHero} />
 
-    <div class="info-grid">
-      <FamilyInfo family={activeHero.family} />
-      <Vehicles vehicles={activeHero.vehicles} />
-    </div>
+        <div class="info-grid">
+          <FamilyInfo family={activeHero.family} />
+          <Vehicles vehicles={activeHero.vehicles} />
+        </div>
 
-    <div class="info-grid">
-      <FinancialStatus financials={activeHero.financials} />
-      <Properties properties={activeHero.properties} />
-    </div>
+        <div class="info-grid">
+          <FinancialStatus financials={activeHero.financials} />
+          <Properties properties={activeHero.properties} />
+        </div>
+      </div>
+    {/key}
 
-    <NetworkAnalysis relationships={activeHero.relationships} />
+    <NetworkAnalysis
+      relationships={activeHero.relationships}
+      allCharacters={heroData}
+      on:selectCharacter={handleCharacterSelect}
+    />
 
     <footer>
       <p>Built by svt. The source code is available on GitHub.</p>

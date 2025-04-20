@@ -1,8 +1,11 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import * as d3 from "d3";
 
   export let relationships;
+  export let allCharacters;
+
+  const dispatch = createEventDispatcher();
 
   let graphContainer;
   let network;
@@ -22,34 +25,38 @@
 
     // Add allies
     relationships.allies.forEach((ally) => {
-      nodes.push({
-        id: ally,
-        group: "ally",
-        value: 5,
-      });
+      if (allCharacters[ally]) {
+        nodes.push({
+          id: ally,
+          group: "ally",
+          value: 5,
+        });
 
-      links.push({
-        source: "Batman",
-        target: ally,
-        value: 1,
-        type: "ally",
-      });
+        links.push({
+          source: "Batman",
+          target: ally,
+          value: 1,
+          type: "ally",
+        });
+      }
     });
 
     // Add enemies
     relationships.enemies.forEach((enemy) => {
-      nodes.push({
-        id: enemy,
-        group: "enemy",
-        value: 5,
-      });
+      if (allCharacters[enemy]) {
+        nodes.push({
+          id: enemy,
+          group: "enemy",
+          value: 5,
+        });
 
-      links.push({
-        source: "Batman",
-        target: enemy,
-        value: 1,
-        type: "enemy",
-      });
+        links.push({
+          source: "Batman",
+          target: enemy,
+          value: 1,
+          type: "enemy",
+        });
+      }
     });
 
     return { nodes, links };
@@ -117,6 +124,11 @@
       .attr("class", "node")
       .call(drag(simulation))
       .on("click", (event, d) => {
+        // Dispatch character selection event if the character exists in our database
+        if (allCharacters[d.id]) {
+          dispatch("selectCharacter", d.id);
+        }
+
         selectedNode = selectedNode === d.id ? null : d.id;
         updateHighlight();
       });
@@ -274,7 +286,7 @@
 
   <div class="filter-info">
     <p>
-      Click on a character to see their connections. Drag nodes to rearrange the
+      Click on a character to see their profile. Drag nodes to rearrange the
       network.
     </p>
   </div>
